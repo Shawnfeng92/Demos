@@ -5,7 +5,7 @@ library(BatchGetSymbols)
 library(quantmod)
 library(doParallel)
 
-DataVendor <- function(tickers = GetSP500Stocks()$Tickers, location = "SP500.csv", parallel = TRUE) {
+DataVendor <- function(tickers = GetSP500Stocks()$Tickers, save_location = "SP500.csv", parallel = TRUE) {
   if(parallel) {
     data <- foreach(i = tickers, .combine = "cbind", .packages = "quantmod") %dopar% {
       temp <- try(getSymbols(Symbols = i, 
@@ -19,7 +19,7 @@ DataVendor <- function(tickers = GetSP500Stocks()$Tickers, location = "SP500.csv
     }
     colnames(data) <- tickers
     
-    write.zoo(x = data, file = location, sep = ",")
+    write.zoo(x = data, file = save_location, sep = ",")
   }
 }
 
