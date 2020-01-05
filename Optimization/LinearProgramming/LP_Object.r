@@ -44,7 +44,7 @@ mVaR$cM <- rbind(
 
 # Optimization result
 mVaR$result <- Rglpk_solve_LP(obj = mVaR$obj, mat = mVaR$cM, 
-                              dir = c("<=", "<=", rep(">=", mVaR$scenarios)),
+                              dir = c("==", "<=", rep(">=", mVaR$scenarios)),
                               bounds = list(lower = list(ind = 1:length(mVaR$obj), 
                                                          val = c(rep(mVaR$lL, mVaR$tickers),
                                                                  rep(- Inf, mVaR$scenarios+1),
