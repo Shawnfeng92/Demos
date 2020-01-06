@@ -55,7 +55,7 @@ mCVaR$time <- system.time(
                                val = rep(mCVaR$lL, mCVaR$tickers)),
                   upper = list(ind = 1:mCVaR$tickers,
                                val = rep(mCVaR$uL, mCVaR$tickers))),
-    rhs = c(1.5, rep(0,mCVaR$scenarios)),
+    rhs = c(mCVaR$leverage, rep(0, mCVaR$scenarios)),
     max = TRUE
   ))
 
@@ -103,7 +103,7 @@ mCVaR.p$time <- system.time(
                                val = rep(mCVaR.p$lL, mCVaR.p$tickers)),
                   upper = list(ind = 1:mCVaR.p$tickers, 
                                val = rep(mCVaR.p$uL, mCVaR.p$tickers))),
-    rhs = c(1.5, mCVaR.p$pL, rep(0,mCVaR.p$scenarios + 2 * mCVaR.p$tickers)),
+    rhs = c(mCVaR,p$leverage, mCVaR.p$pL, rep(0,mCVaR.p$scenarios + 2 * mCVaR.p$tickers)),
     types = c(rep("C", mCVaR.p$tickers + mCVaR.p$scenarios + 1), 
               rep("B", mCVaR.p$tickers)),
     max = TRUE
@@ -141,7 +141,7 @@ mCVaR.t$time <- system.time(
                                val = rep(mCVaR.t$lL, mCVaR.t$tickers)),
                   upper = list(ind = 1:mCVaR.t$tickers,
                                val = rep(mCVaR.t$uL, mCVaR.t$tickers))),
-    rhs = c(1.5, mCVaR.t$target, rep(0,mCVaR.t$scenarios)),
+    rhs = c(mCVaR.t$leverage, mCVaR.t$target, rep(0,mCVaR.t$scenarios)),
     max = TRUE
   ))
 
