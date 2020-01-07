@@ -156,43 +156,66 @@ mMAD.p$MAD <- mMAD.p$result$optimum
 names(mMAD.p$weight) <- colnames(returns)
 
 # Create a max ratio of return over MAD optimization ----
-mMAD.r <- mMAD.p
+mMAD.r <- mMAD
 
 
-# Objective function, weight + absolute distance + position index + shrinkage
+# Objective function, weight + absolute distance + shrinkage
 mMAD.r$obj <- c(
   rep(0, mMAD.r$tickers),
   rep(1, mMAD.r$scenarios),
-  rep(0, mMAD.r$tickers),
   0
 )
 
 # Constraint Matrix
 mMAD.r$cM <- rbind(
-  c(rep(1, mMAD.r$tickers), rep(0, mMAD.r$scenarios), rep(0, mMAD.r$tickers)),
-  c(rep(0, mMAD.r$tickers), rep(0, mMAD.r$scenarios), rep(1, mMAD.r$tickers)),
+  c(rep(1, mMAD.r$tickers), rep(0, mMAD.r$scenarios), -mMAD.r$leverage),
+  c(mMAD.r$mu, rep(0, mMAD.r$scenarios), 0),
   cbind(
     matrix(
       returns - matrix(rep(mMAD.r$mu, mMAD.r$scenarios), mMAD.r$scenarios),
       mMAD.r$scenarios
-    ),
-    diag(1, mMAD.r$scenarios),
-    matrix(0, mMAD.r$scenarios, mMAD.r$tickers)
+    ), diag(1, mMAD.r$scenarios), rep(0, mMAD.r$scenarios)
   ),
   cbind(
     matrix(
       -returns + matrix(rep(mMAD.r$mu, mMAD.r$scenarios), mMAD.r$scenarios),
       mMAD.r$scenarios
-    ),
-    diag(1, mMAD.r$scenarios),
-    matrix(0, mMAD.r$scenarios, mMAD.r$tickers)
+    ), diag(1, mMAD.r$scenarios), rep(0, mMAD.r$scenarios)
   ),
   cbind(
-    diag(1, mMAD.r$tickers), matrix(0, mMAD.r$tickers, mMAD.r$scenarios),
-    diag(-mMAD.r$lL, mMAD.r$tickers)
+    diag(-1, mMAD.r$tickers),
+    matrix(0, mMAD.r$tickers, mMAD.r$scenarios),
+    rep(mMAD.r$uL, mMAD.r$tickers)
   ),
   cbind(
-    diag(-1, mMAD.r$tickers), matrix(0, mMAD.r$tickers, mMAD.r$scenarios),
-    diag(mMAD.r$uL, mMAD.r$tickers)
+    diag(1, mMAD.r$tickers),
+    matrix(0, mMAD.r$tickers, mMAD.r$scenarios),
+    rep(-mMAD.r$lL, mMAD.r$tickers)
   )
 )
+
+# Optimization result
+mMAD.r$time <- system.time(
+  mMAD.r$result <- Rglpk_solve_LP(
+    obj = mMAD.r$obj, mat = mMAD.r$cM,
+    dir = c("==", "==", rep(">=", 2 * mMAD.r$scenarios + 2 * mMAD.r$tickers)),
+    bounds = list(
+      lower = list(
+        ind = 1:mMAD.r$tickers,
+        val = rep(-Inf, mMAD.r$tickers)
+      ),
+      upper = list(
+        ind = 1:mMAD.r$tickers,
+        val = rep(Inf, mMAD.r$tickers)
+      )
+    ),
+    rhs = c(0, 1, rep(0, 2 * mMAD.r$scenarios + 2 * mMAD.r$tickers)),
+    max = FALSE
+  )
+)
+
+# Outputs
+mMAD.r$shrinkage <- mMAD.r$result$solution[length(mMAD.r$obj)]
+mMAD.r$weight <- mMAD.r$result$solution[1:mMAD.r$tickers] / mMAD.r$shrinkage
+mMAD.r$MAD <- mMAD.r$result$optimum / mMAD.r$shrinkage
+names(mMAD.r$weight) <- colnames(returns)
