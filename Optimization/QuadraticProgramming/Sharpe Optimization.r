@@ -54,3 +54,39 @@ mVol$time <- system.time(
 # Output
 mVol$weights <- mVol$result$x
 names(mVol$weights) <- colnames(returns)
+mVol$Volatility <- t(mVol$weights) %*% mVol$cov %*% mVol$weights
+mVol$r <- t(mVol$weights) %*% mVol$mu
+
+# Create a min Sharpe Ratio optimization ----
+mVol.r <- mVol
+
+# Create P matrix
+mVol.r$P <- rbind(cbind(mVol.r$cov, rep(0, mVol.r$tickers)), rep(0, mVol.r$tickers + 1))
+
+# Create q vector
+mVol.r$q <- rep(0, mVol.r$tickers + 1)
+
+# Optimization result
+mVol.r$time <- system.time(
+  mVol.r$result <- solve_osqp(
+    P = mVol.r$P,
+    q = mVol.r$q,
+    A = rbind(
+      c(rep(1, mVol.r$tickers), -mVol.r$l),
+      c(mVol.r$mu, 0),
+      cbind(diag(-1, mVol.r$tickers), rep(mVol.r$uL, mVol.r$tickers)),
+      cbind(diag(1, mVol.r$tickers), rep(-mVol.r$lL, mVol.r$tickers))
+    ),
+    l = c(0, 1, rep(0, 2 * mVol.r$tickers)),
+    u = c(0, 1, rep(Inf, 2 * mVol.r$tickers)),
+    pars = osqpSettings(verbose = FALSE)
+  )
+)
+
+# Output
+mVol.r$shrinkage <- mVol.r$result$x[mVol.r$tickers + 1]
+mVol.r$weights <- mVol.r$result$x[1:mVol.r$tickers] / mVol.r$shrinkage
+names(mVol.r$weights) <- colnames(returns)
+mVol.r$Volatility <- t(mVol.r$weights) %*% mVol.r$cov %*% mVol.r$weights
+mVol.r$r <- t(mVol.r$weights) %*% mVol.r$mu
+mVol.r$Sharpe <- mVol.r$r / sqrt(mVol.r$Volatility)
