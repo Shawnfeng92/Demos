@@ -14,7 +14,7 @@ raw.returns <- raw.returns["2019"]
 raw.returns <- raw.returns[rowSums(is.na(raw.returns)) < ncol(raw.returns) - 5, ]
 raw.returns <- raw.returns[ , colSums(is.na(raw.returns)) == 0]
 
-returns <- raw.returns[, 1:31]
+returns <- raw.returns[, 1:40]
 
 # Create a min CVaR optimization with simple leverage and box constraints ----
 mCVaR <- list()
@@ -103,7 +103,8 @@ mCVaR.p$time <- system.time(
                                val = rep(mCVaR.p$lL, mCVaR.p$tickers)),
                   upper = list(ind = 1:mCVaR.p$tickers, 
                                val = rep(mCVaR.p$uL, mCVaR.p$tickers))),
-    rhs = c(mCVaR,p$leverage, mCVaR.p$pL, rep(0,mCVaR.p$scenarios + 2 * mCVaR.p$tickers)),
+    rhs = c(mCVaR.p$leverage, mCVaR.p$pL, rep(0, mCVaR.p$scenarios), 
+            rep(-0.01, 2 * mCVaR.p$tickers)),
     types = c(rep("C", mCVaR.p$tickers + mCVaR.p$scenarios + 1), 
               rep("B", mCVaR.p$tickers)),
     max = TRUE
