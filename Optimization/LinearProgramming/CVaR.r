@@ -3,8 +3,10 @@ library(zoo)
 library(Rglpk)
 
 # Load price data as time series type
-prices <- xts(read.csv.zoo(file = "~/GitHub/Demos/Data/DataStorage/AMEX.csv",
-                           FUN = as.Date))
+prices <- xts(read.csv.zoo(
+  file = "~/GitHub/Demos/Data/DataStorage/AMEX.csv",
+  FUN = as.Date
+))
 
 # Daily log return data
 raw.returns <- diff(log(prices))
@@ -12,7 +14,7 @@ raw.returns <- diff(log(prices))
 # Process optimization on stocks with full 2019 performance
 raw.returns <- raw.returns["2019"]
 raw.returns <- raw.returns[rowSums(is.na(raw.returns)) < ncol(raw.returns) - 5, ]
-raw.returns <- raw.returns[ , colSums(is.na(raw.returns)) == 0]
+raw.returns <- raw.returns[, colSums(is.na(raw.returns)) == 0]
 
 returns <- raw.returns[, 1:40]
 
@@ -28,20 +30,22 @@ mCVaR$alpha <- 0.05
 
 # Constraints
 mCVaR$leverage <- 1.5
-mCVaR$uL <- 1       # Upper limitation for box constrain
-mCVaR$lL <- - 1      # Lower limitation
+mCVaR$uL <- 1 # Upper limitation for box constrain
+mCVaR$lL <- -1 # Lower limitation
 
 # Objective function, weight + loss + VaR
-mCVaR$obj <- c(rep(0, mCVaR$tickers), 
-              rep(-1/mCVaR$alpha/mCVaR$scenarios, mCVaR$scenarios), 
-              -1)
+mCVaR$obj <- c(
+  rep(0, mCVaR$tickers),
+  rep(-1 / mCVaR$alpha / mCVaR$scenarios, mCVaR$scenarios),
+  -1
+)
 
 # Constraints matrix
 mCVaR$cM <- rbind(
   c(rep(1, mCVaR$tickers), rep(0, mCVaR$scenarios + 1)),
   cbind(
-    matrix(returns, mCVaR$scenarios), 
-    diag(1, mCVaR$scenarios), 
+    matrix(returns, mCVaR$scenarios),
+    diag(1, mCVaR$scenarios),
     rep(1, mCVaR$scenarios)
   )
 )
@@ -51,13 +55,20 @@ mCVaR$time <- system.time(
   mCVaR$result <- Rglpk_solve_LP(
     obj = mCVaR$obj, mat = mCVaR$cM,
     dir = c("==", rep(">=", mCVaR$scenarios)),
-    bounds = list(lower = list(ind = 1:mCVaR$tickers,
-                               val = rep(mCVaR$lL, mCVaR$tickers)),
-                  upper = list(ind = 1:mCVaR$tickers,
-                               val = rep(mCVaR$uL, mCVaR$tickers))),
+    bounds = list(
+      lower = list(
+        ind = 1:mCVaR$tickers,
+        val = rep(mCVaR$lL, mCVaR$tickers)
+      ),
+      upper = list(
+        ind = 1:mCVaR$tickers,
+        val = rep(mCVaR$uL, mCVaR$tickers)
+      )
+    ),
     rhs = c(mCVaR$leverage, rep(0, mCVaR$scenarios)),
     max = TRUE
-  ))
+  )
+)
 
 # Outputs
 mCVaR$weight <- mCVaR$result$solution[1:mCVaR$tickers]
@@ -71,44 +82,61 @@ mCVaR.p <- mCVaR
 # Add position limitation
 mCVaR.p$pL <- 15
 
-# Objective function, weight + loss + VaR + position 
-mCVaR.p$obj <- c(rep(0, mCVaR.p$tickers), 
-               rep(-1/mCVaR.p$alpha/mCVaR.p$scenarios, mCVaR.p$scenarios), 
-               -1, rep(0, mCVaR.p$tickers))
+# Objective function, weight + loss + VaR + position
+mCVaR.p$obj <- c(
+  rep(0, mCVaR.p$tickers),
+  rep(-1 / mCVaR.p$alpha / mCVaR.p$scenarios, mCVaR.p$scenarios),
+  -1, rep(0, mCVaR.p$tickers)
+)
 
 # Constraints matrix
 mCVaR.p$cM <- rbind(
   c(rep(1, mCVaR.p$tickers), rep(0, mCVaR.p$scenarios + 1 + mCVaR.p$tickers)),
   c(rep(0, mCVaR.p$tickers + 1 + mCVaR.p$scenarios), rep(1, mCVaR.p$tickers)),
   cbind(
-    matrix(returns, mCVaR.p$scenarios), 
-    diag(1, mCVaR.p$scenarios), 
+    matrix(returns, mCVaR.p$scenarios),
+    diag(1, mCVaR.p$scenarios),
     rep(1, mCVaR.p$scenarios),
     matrix(0, mCVaR.p$scenarios, mCVaR.p$tickers)
   ),
-  cbind(diag(1, mCVaR.p$tickers), 
-        matrix(0, mCVaR.p$tickers, mCVaR.p$scenarios+1), 
-        diag(-mCVaR.p$lL, mCVaR.p$tickers)),
-  cbind(diag(-1, mCVaR.p$tickers), 
-        matrix(0, mCVaR.p$tickers, mCVaR.p$scenarios+1), 
-        diag(mCVaR.p$uL, mCVaR.p$tickers))
+  cbind(
+    diag(1, mCVaR.p$tickers),
+    matrix(0, mCVaR.p$tickers, mCVaR.p$scenarios + 1),
+    diag(-mCVaR.p$lL, mCVaR.p$tickers)
+  ),
+  cbind(
+    diag(-1, mCVaR.p$tickers),
+    matrix(0, mCVaR.p$tickers, mCVaR.p$scenarios + 1),
+    diag(mCVaR.p$uL, mCVaR.p$tickers)
+  )
 )
 
 # Optimization result
 mCVaR.p$time <- system.time(
   mCVaR.p$result <- Rglpk_solve_LP(
-    obj = mCVaR.p$obj, mat = mCVaR.p$cM, 
+    obj = mCVaR.p$obj, mat = mCVaR.p$cM,
     dir = c("==", "<=", rep(">=", mCVaR.p$scenarios + 2 * mCVaR.p$tickers)),
-    bounds = list(lower = list(ind = 1:mCVaR.p$tickers, 
-                               val = rep(mCVaR.p$lL, mCVaR.p$tickers)),
-                  upper = list(ind = 1:mCVaR.p$tickers, 
-                               val = rep(mCVaR.p$uL, mCVaR.p$tickers))),
-    rhs = c(mCVaR.p$leverage, mCVaR.p$pL, rep(0, mCVaR.p$scenarios), 
-            rep(-0.01, 2 * mCVaR.p$tickers)),
-    types = c(rep("C", mCVaR.p$tickers + mCVaR.p$scenarios + 1), 
-              rep("B", mCVaR.p$tickers)),
+    bounds = list(
+      lower = list(
+        ind = 1:mCVaR.p$tickers,
+        val = rep(mCVaR.p$lL, mCVaR.p$tickers)
+      ),
+      upper = list(
+        ind = 1:mCVaR.p$tickers,
+        val = rep(mCVaR.p$uL, mCVaR.p$tickers)
+      )
+    ),
+    rhs = c(
+      mCVaR.p$leverage, mCVaR.p$pL, rep(0, mCVaR.p$scenarios),
+      rep(-0.01, 2 * mCVaR.p$tickers)
+    ),
+    types = c(
+      rep("C", mCVaR.p$tickers + mCVaR.p$scenarios + 1),
+      rep("B", mCVaR.p$tickers)
+    ),
     max = TRUE
-))
+  )
+)
 
 # Outputs
 mCVaR.p$weight <- mCVaR.p$result$solution[1:mCVaR.p$tickers]
@@ -120,15 +148,15 @@ mCVaR.p$VaR <- -mCVaR.p$result$solution[length(mCVaR.p$obj)]
 mCVaR.t <- mCVaR
 
 # Add target return constraint
-mCVaR.t$target <- 0.15/252
+mCVaR.t$target <- 0.15 / 252
 
 # Constraints matrix
 mCVaR.t$cM <- rbind(
   c(rep(1, mCVaR.t$tickers), rep(0, mCVaR.t$scenarios + 1)),
   c(mCVaR.t$mu, rep(0, mCVaR.t$scenarios + 1)),
   cbind(
-    matrix(returns, mCVaR.t$scenarios), 
-    diag(1, mCVaR.t$scenarios), 
+    matrix(returns, mCVaR.t$scenarios),
+    diag(1, mCVaR.t$scenarios),
     rep(1, mCVaR.t$scenarios)
   )
 )
@@ -138,13 +166,20 @@ mCVaR.t$time <- system.time(
   mCVaR.t$result <- Rglpk_solve_LP(
     obj = mCVaR.t$obj, mat = mCVaR.t$cM,
     dir = c("==", rep(">=", mCVaR.t$scenarios + 1)),
-    bounds = list(lower = list(ind = 1:mCVaR.t$tickers,
-                               val = rep(mCVaR.t$lL, mCVaR.t$tickers)),
-                  upper = list(ind = 1:mCVaR.t$tickers,
-                               val = rep(mCVaR.t$uL, mCVaR.t$tickers))),
-    rhs = c(mCVaR.t$leverage, mCVaR.t$target, rep(0,mCVaR.t$scenarios)),
+    bounds = list(
+      lower = list(
+        ind = 1:mCVaR.t$tickers,
+        val = rep(mCVaR.t$lL, mCVaR.t$tickers)
+      ),
+      upper = list(
+        ind = 1:mCVaR.t$tickers,
+        val = rep(mCVaR.t$uL, mCVaR.t$tickers)
+      )
+    ),
+    rhs = c(mCVaR.t$leverage, mCVaR.t$target, rep(0, mCVaR.t$scenarios)),
     max = TRUE
-  ))
+  )
+)
 
 # Outputs
 mCVaR.t$weight <- mCVaR.t$result$solution[1:mCVaR.t$tickers]
@@ -155,28 +190,30 @@ mCVaR.t$VaR <- -mCVaR.t$result$solution[length(mCVaR.t$obj)]
 # Create a max ratio of return over CVaR optimization ----
 mCVaR.r <- mCVaR
 
-# Objective function, weight + loss + VaR + shrinkage 
-mCVaR.r$obj <- c(rep(0, mCVaR.r$tickers), 
-                 rep(-1/mCVaR.r$alpha/mCVaR.r$scenarios, mCVaR.r$scenarios), 
-                 -1, 0)
+# Objective function, weight + loss + VaR + shrinkage
+mCVaR.r$obj <- c(
+  rep(0, mCVaR.r$tickers),
+  rep(-1 / mCVaR.r$alpha / mCVaR.r$scenarios, mCVaR.r$scenarios),
+  -1, 0
+)
 
 # Constraints matrix
 mCVaR.r$cM <- rbind(
   c(rep(1, mCVaR.r$tickers), rep(0, mCVaR.r$scenarios + 1), -mCVaR.r$leverage),
   c(mCVaR.r$mu, rep(0, mCVaR.r$scenarios + 1), 0),
   cbind(
-    matrix(returns, mCVaR.r$scenarios), 
-    diag(1, mCVaR.r$scenarios), 
+    matrix(returns, mCVaR.r$scenarios),
+    diag(1, mCVaR.r$scenarios),
     rep(1, mCVaR.r$scenarios),
     rep(0, mCVaR.r$scenarios)
   ),
   cbind(
-    diag(-1, mCVaR.r$tickers), 
+    diag(-1, mCVaR.r$tickers),
     matrix(0, mCVaR.r$tickers, mCVaR.r$scenarios + 1),
     rep(mCVaR.r$uL, mCVaR.r$tickers)
   ),
   cbind(
-    diag(1, mCVaR.r$tickers), 
+    diag(1, mCVaR.r$tickers),
     matrix(0, mCVaR.r$tickers, mCVaR.r$scenarios + 1),
     rep(-mCVaR.r$lL, mCVaR.r$tickers)
   )
@@ -187,13 +224,20 @@ mCVaR.r$time <- system.time(
   mCVaR.r$result <- Rglpk_solve_LP(
     obj = mCVaR.r$obj, mat = mCVaR.r$cM,
     dir = c("==", "==", rep(">=", mCVaR.r$scenarios + 2 * mCVaR.r$tickers)),
-    bounds = list(lower = list(ind = 1:mCVaR.r$tickers,
-                               val = rep(-Inf, mCVaR.r$tickers)),
-                  upper = list(ind = 1:mCVaR.r$tickers,
-                               val = rep(Inf, mCVaR.r$tickers))),
-    rhs = c(0, 1, rep(0,mCVaR.r$scenarios), rep(0, 2 * mCVaR.r$tickers)),
+    bounds = list(
+      lower = list(
+        ind = 1:mCVaR.r$tickers,
+        val = rep(-Inf, mCVaR.r$tickers)
+      ),
+      upper = list(
+        ind = 1:mCVaR.r$tickers,
+        val = rep(Inf, mCVaR.r$tickers)
+      )
+    ),
+    rhs = c(0, 1, rep(0, mCVaR.r$scenarios), rep(0, 2 * mCVaR.r$tickers)),
     max = TRUE
-  ))
+  )
+)
 
 # Outputs
 mCVaR.r$weight <- mCVaR.r$result$solution[1:mCVaR.r$tickers]
