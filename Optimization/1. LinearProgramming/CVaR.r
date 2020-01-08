@@ -1,3 +1,22 @@
+#
+# Author: Xiaokang Feng
+# GitHub: https://github.com/Shawnfeng92
+#
+# In this script, I will show you how to use linear programming problem solver ("Rglpk") 
+# to finish portfolio opimization with CVaR related utility function.
+#
+# After I get the min CVaR, I can also get the VaR of the final portfolio, since the VaR
+# is a part of the my variable. But I didn't choose the VaR as my objective function, 
+# because VaR is not a coherent risk measure.
+# 
+# If we can add a coefficient into the objective funciton, we can get a TVaR optimization.
+#
+# As a benefit of linear programming, we can add position limitation to this type
+# optimization. However, the strick position limitation will increase the processing time
+# at a time complex as O(e^n). So, I suggest use soft position limiation and will introduce
+# a tolerance parameter in final version.
+#
+
 library(xts)
 library(zoo)
 library(Rglpk)

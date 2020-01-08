@@ -1,3 +1,31 @@
+#
+# Author: Xiaokang Feng
+# GitHub: https://github.com/Shawnfeng92
+#
+# In this script, I will show you how to use linear programming problem solver ("Rglpk")
+# to finish portfolio opimization with MAD related utility function.
+#
+# The MAD means mean absolute distance. It describes the degree of volatility of your
+# portfolio. Also, people tend to use the true volatility or Sharpe Ratio as a risk
+# measure to do portfolio optimization. They each have their own strengthes and 
+# weaknesses.
+#
+# The Sharpe Ratio is well adopted in financial industry. But Sharpe Ratio optimization
+# requires quadratic programming which is more complex to handle. Besides, Sharpe Ratio
+# asks for a stable covariance matrix to predict future portfolio performance, while 
+# the prediciton of covariance matrix is almost impossible.
+#
+# The MAD measures the distance of each possible return to mean return of portfolio. It 
+# can describe the degree of volatility of the return distribution. Since we can use lp
+# solve to solve MAD problems, it is a robust optimization, and we can customize the 
+# objective function. 
+#
+# As a benefit of linear programming, we can add position limitation to this type
+# optimization. However, the strick position limitation will increase the processing time
+# at a time complex as O(e^n). So, I suggest use soft position limiation and will 
+# introduce a tolerance parameter in the final version.
+#
+
 library(xts)
 library(zoo)
 library(Rglpk)

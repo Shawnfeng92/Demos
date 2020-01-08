@@ -1,3 +1,15 @@
+#
+# Author: Xiaokang Feng
+# GitHub: https://github.com/Shawnfeng92
+#
+# In this script, I will show you how to quadratic programming problem solver ("osqp") 
+# to finish portfolio opimization with volatility related utility function.
+#
+# Since the qp solvers have their own objective function, it is hard to customize 
+# constraints. I only use box and levearge constraints here, and will add more linear
+# constraints, such as turnover, in the final version.
+#
+
 library(xts)
 library(zoo)
 library(osqp)
