@@ -87,6 +87,6 @@ mVol.r$time <- system.time(
 mVol.r$shrinkage <- mVol.r$result$x[mVol.r$tickers + 1]
 mVol.r$weights <- mVol.r$result$x[1:mVol.r$tickers] / mVol.r$shrinkage
 names(mVol.r$weights) <- colnames(returns)
-mVol.r$Volatility <- t(mVol.r$weights) %*% mVol.r$cov %*% mVol.r$weights
+mVol.r$Volatility <- sqrt(t(mVol.r$weights) %*% mVol.r$cov %*% mVol.r$weights)
 mVol.r$r <- t(mVol.r$weights) %*% mVol.r$mu
 mVol.r$Sharpe <- mVol.r$r / sqrt(mVol.r$Volatility)
