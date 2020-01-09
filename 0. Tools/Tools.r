@@ -23,41 +23,65 @@ library(doParallel)
 # raw.returns <- raw.returns[rowSums(is.na(raw.returns)) < ncol(raw.returns) - 5, ]
 # raw.returns <- raw.returns[, colSums(is.na(raw.returns)) == 0]
 
-returns <- raw.returns[, sample(1:1995, 15)]
+returns <- raw.returns[1:50, sample(1:1995, 5)]
 
 # Function to draw efficient frontier
-qpEF <- function(R) {
-  muList <- colMeans(R)
-  sdList <- apply(R, 2, sd)
-  assets <- cbind(sdList, muList)
-  colnames(assets) <- c("Sigma", "Mean Return")
-
-  returnList <- seq(
-    from = min(muList),
-    to = max(muList),
-    length.out = 100
-  )
-
+EF <- function(R, risk = "sigma", parallel = FALSE) {
+  # Information of return data
+  muVector <- colMeans(R)
+  sdVector <- apply(R, 2, sd)
+  assets <- cbind(sdVector, muVector)
+  colnames(assets) <- c("Risk", "Mean Return")
+  
+  # Efficient frontier points container
   EF <- c()
-  A <- cov(returns)
-  cl <- parallel::makeCluster(16)
-  doParallel::registerDoParallel(cl)
-  EF <- foreach(i = returnList, .combine = "rbind", .packages = "osqp") %dopar% {
-    x <- solve_osqp(
-      P = A, q = rep(0, ncol(R)), A = rbind(muList, rep(1, ncol(R))),
-      l = c(i, 1), u = c(i, 1), pars = osqpSettings(verbose = FALSE)
-    )$x
-    c(sqrt(t(x) %*% cov(R) %*% x), t(x) %*% muList)
-  }
-  stopCluster(cl)
+  
+  # Efficient frontier points return value
+  returnList <- seq(from = min(muVector), to = max(muVector), length.out = 100)
 
+  P <- cov(returns)
+  if(parallel){
+    EF <- foreach(i = returnList, .combine = "rbind", .packages = "osqp") %dopar% {
+      # QP solution for each return
+      x <- solve_osqp(
+        P = P, q = rep(0, ncol(R)), A = rbind(muVector, rep(1, ncol(R))),
+        l = c(i, 1), u = c(i, 1), pars = osqpSettings(verbose = FALSE))$x
+      
+      # Store efficient frontier points
+      c(sqrt(t(x) %*% cov(R) %*% x), t(x) %*% muVector)
+    }
+  } else {
+    for (i in returnList) {
+      # QP solution for each return
+      x <- solve_osqp(
+        P = P, q = rep(0, ncol(R)), A = rbind(muVector, rep(1, ncol(R))),
+        l = c(i, 1), u = c(i, 1), pars = osqpSettings(verbose = FALSE))$x
+      
+      # Store efficient frontier points
+      EF <- rbind(EF, c(sqrt(t(x) %*% cov(R) %*% x), t(x) %*% muVector))
+    }
+  }
+
+  # Plot efficient frontier
   plot(EF,
     type = "l", xlab = "sigma", ylab = "return",
-    ylim = c(min(muList), max(muList)),
-    xlim = c(0, max(sdList))
+    ylim = c(min(0, min(muVector)), max(muVector)),
+    xlim = c(0, max(sdVector)),
+    main = "Efficient Frontier",
+    lwd = 1
   )
-  points(assets, col = "red")
-  points(rbind(c(0, 0), c(max(muList) / max(EF[, 2] / EF[, 1]), max(muList))), type = "l", col = "green")
+
+  # Add Underlyings points
+  lines(assets, col = "red", type = "p", pch = 19)
+  text(assets, rownames(assets), cex=0.6, pos=4, col="red")
+
+  # Tangent line
+  lines(rbind(c(0, 0), c(max(muVector) / max(EF[, 2] / EF[, 1]), max(muVector))),
+        type = "l", col = "green", lwd = 2)
+  grid()
+  
+  legend("topleft", legend = c("Tangent Line", "Efficient Frontier", "Underlyings"),
+         col = c("green", "black", "red"), lty = 1, bg='gray')
 }
 
-qpEF(returns)
+EF(returns)
