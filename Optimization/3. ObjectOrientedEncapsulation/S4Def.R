@@ -9,8 +9,8 @@ library(xts)
 library(zoo)
 setOldClass("zoo")
 
-portfolio.data <- setClass(
-  "portfolio.data",
+PortfolioData <- setClass(
+  "PortfolioData",
   slots = list(
     tickers = "character",
     nticker = "integer",
@@ -27,8 +27,8 @@ portfolio.data <- setClass(
   )
 )
 
-portfolio.utility <- setClass(
-  "portfolio.utility",
+PortfolioUtility <- setClass(
+  "PortfolioUtility",
   slots = list(
     risk = "character",
     return = "character"
@@ -39,14 +39,13 @@ portfolio.utility <- setClass(
   )
 )
 
-
-portfolio.const <- setClass(
-  "portfolio.const",
+PortfolioConst <- setClass(
+  "PortfolioConst",
   slots = list(
     type = "character",
     leverage = "numeric",
-    box_const = "list",
-    group_const = "list",
+    box_const = "numeric",
+    group_const = "numeric",
     turnover = "numeric",
     position_limitation = "integer",
     target_return = "numeric",
@@ -56,8 +55,8 @@ portfolio.const <- setClass(
   prototype = list(
     type = NA_character_,
     leverage = 1,
-    box_const = NA_character_,
-    group_const = NA_character_,
+    box_const = NA_real_,
+    group_const = NA_real_,
     turnover = NA_real_,
     position_limitation = NA_integer_,
     target_return = NA_real_,
@@ -66,19 +65,39 @@ portfolio.const <- setClass(
   )
 )
 
-portfolio <- setClass(
-  "portfolio",
+PortfolioResult <- setClass(
+  "PortfolioResult",
+  slots = list(
+    time = "numeric",
+    weights = "numeric",
+    risk = "character",
+    return = "numeric",
+    target = "numeric"
+  ),
+  prototype = list(
+    time = NA_real_,
+    weights = NA_real_,
+    risk = NA_character_,
+    return = NA_real_,
+    target = NA_real_
+  )
+)
+
+Portfolio <- setClass(
+  "Portfolio",
   slots = list(
     name = "character",
-    data =  "portfolio.data",
-    utility = "portfolio.utility",
-    const = "portfolio.const"
+    data =  "PortfolioData",
+    utility = "PortfolioUtility",
+    const = "PortfolioConst",
+    result = "PortfolioResult"
   ),
   prototype = list(
     name = NA_character_,
     data = NA,
     utility = NA,
-    const = NA
+    const = NA,
+    result = NA
   )
 )
 
