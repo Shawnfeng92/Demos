@@ -16,7 +16,7 @@ library(osqp)
 
 # Load price data as time series type
 prices <- xts(read.csv.zoo(
-  file = "~/GitHub/Demos/Data/DataStorage/AMEX.csv",
+  file = "~/GitHub/Demos/1. Data/DataStorage/AMEX.csv",
   FUN = as.Date
 ))
 
