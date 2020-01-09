@@ -41,7 +41,7 @@ portfolio.const <- setClass(
   slots = list(
     type = "character",
     leverage = "numeric",
-    box_const = "array",
+    box_const = "list",
     group_const = "list",
     turnover = "numeric",
     position_limitation = "integer",
