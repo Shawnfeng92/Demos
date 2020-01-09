@@ -68,20 +68,19 @@ EF <- function(R, risk = "sigma", parallel = FALSE) {
     ylim = c(min(0, min(muVector)), max(muVector)),
     xlim = c(0, max(sdVector)),
     main = "Efficient Frontier",
-    lwd = 1
+    lwd = 1, col = "darksalmon"
   )
 
   # Add Underlyings points
-  lines(assets, col = "red", type = "p", pch = 19)
-  text(assets, rownames(assets), cex=0.6, pos=4, col="red")
+  lines(assets, col = "honeydew4", type = "p", pch = 19)
+  text(assets, rownames(assets), cex=0.6, pos=4, col="honeydew4")
 
   # Tangent line
   lines(rbind(c(0, 0), c(max(muVector) / max(EF[, 2] / EF[, 1]), max(muVector))),
-        type = "l", col = "green", lwd = 2)
+        type = "l", col = "darkseagreen", lwd = 2)
   grid()
   
   legend("topleft", legend = c("Tangent Line", "Efficient Frontier", "Underlyings"),
-         col = c("green", "black", "red"), lty = 1, bg='gray')
+         col = c("darkseagreen", "darksalmon", "honeydew4"), lty = 1, bg='ivory')
 }
 
-EF(returns)
