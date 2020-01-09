@@ -5,7 +5,7 @@
 # In this script, I will show you how to use linear programming problem solver ("Rglpk")
 # to finish portfolio opimization with MAD related utility function.
 #
-# The MAD means mean absolute distance. It describes the degree of volatility of your
+# The MAD means mean absolute deviation It describes the degree of volatility of your
 # portfolio. Also, people tend to use the true volatility or Sharpe Ratio as a risk
 # measure to do portfolio optimization. They each have their own strengthes and 
 # weaknesses.
