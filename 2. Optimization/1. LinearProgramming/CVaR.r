@@ -76,12 +76,12 @@ mCVaR$time <- system.time(
     dir = c("==", rep(">=", mCVaR$scenarios)),
     bounds = list(
       lower = list(
-        ind = 1:mCVaR$tickers,
-        val = rep(mCVaR$lL, mCVaR$tickers)
+        ind = c(1:mCVaR$tickers, length(mCVaR$obj)),
+        val = c(rep(mCVaR$lL, mCVaR$tickers), - Inf)
       ),
       upper = list(
-        ind = 1:mCVaR$tickers,
-        val = rep(mCVaR$uL, mCVaR$tickers)
+        ind = c(1:mCVaR$tickers, length(mCVaR$obj)),
+        val = c(rep(mCVaR$uL, mCVaR$tickers), Inf)
       )
     ),
     rhs = c(mCVaR$leverage, rep(0, mCVaR$scenarios)),
