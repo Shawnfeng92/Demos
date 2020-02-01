@@ -1,3 +1,14 @@
+#
+# Author: Xiaokang Feng
+#
+# In this script, I will demonstrate how to implement a basic linear regression model.
+# Because the linear regression models have 
+#
+#
+
+
+
+
 data <- as.matrix(read.csv(
   file = "C:/Users/Shawn/Desktop/DeathRatePrediction.csv", 
   sep = ",", 
